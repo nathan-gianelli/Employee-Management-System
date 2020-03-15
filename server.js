@@ -1,7 +1,6 @@
 const mysql = require('mysql')
 const conTable = require('console.table');
 const inquirer = require('inquirer');
-const PORT = 3306
 
 var connection = mysql.createConnection({
     host: "localhost",
@@ -13,7 +12,7 @@ var connection = mysql.createConnection({
 
 connection.connect(function(err) {
     if (err) throw err
-    console.log(`connected to port ${PORT}`);
+    console.log(`connected to port`);
     start();
 });
 
@@ -63,7 +62,7 @@ inquirer.prompt([
           break;
 
         case "update employee roles":
-          updateEmployeeRole();
+          updateEmployeeWizard();
           break;
 
         case "Quit":
@@ -132,3 +131,90 @@ function newEmployee() {
   }) 
 };
 // view deparment
+function viewDepartment() {
+  connection.query("SELECT * FROM department", function(err, res) {
+    if (err) throw err;
+    console.table(res)
+  })
+  start()
+};
+// view roles
+function viewRole() {
+  connection.query("SELECT * FROM role", function(err, res) {
+    if (err) throw err;
+    console.table(res)
+  })
+  start()
+}
+// view employee
+function viewEmployee() {
+  connection.query("SELECT * FROM employee", function(err, res) {
+    if (err) throw err;
+    console.table(res)
+  })
+  start()
+}
+// update employee role
+function updateEmployeeRole(roleId, employeeId) {
+  connection.query("UPDATE employee SET role_id = "+roleId+" WHERE id = "+employeeId+";")
+}
+
+// {
+//   id: 1,
+//   first_name: 'Jeff',
+//   last_name: 'Hoffman',
+//   role_id: 1,
+//   manager_id: null
+// }
+
+function updateEmployeeWizard() {
+  var employeeName;
+  var roleTitle;
+
+  connection.query("SELECT * FROM employee", function(err, res) {
+    if (err) throw err;
+    // console.log(res)
+    var employeeList = [];
+    
+    res.map((val, index, arr) => {
+      console.log(val.first_name)
+      employeeName = val.first_name;
+      employeeList.push(val.first_name)  
+      // return element to new Array
+    });
+    inquirer.prompt([
+      {
+      name: 'firstName',
+      type: 'list',
+      message: 'What is the name of the employee you would like to update?',
+      choices: employeeList
+      }
+      ]).then(function(answer) {
+        console.log(answer.firstName)
+      var roleList = [];
+
+        connection.query("SELECT * FROM role", function(err, response) {
+          if (err) throw err
+          response.map((val, index, arr) => {
+            roleList.push(val.title)  
+            // return element to new Array
+          });
+          inquirer.prompt([
+            {
+              name: 'roleTitle',
+              type:'list',
+              message: 'please select a role',
+              choices: roleList
+            }
+          ]).then(function(roleAnswer) {
+            console.log(roleAnswer)
+            roleTitle = roleAnswer
+            // new help updating employee with id
+          })
+        })
+       // console.log(roleList)
+        start()
+        
+      })
+  })
+}
